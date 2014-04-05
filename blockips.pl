@@ -11,7 +11,7 @@ my $nginx_conffile="/etc/nginx/conf.d/blockips.conf";
 my $script_name=$0;
 
 my $response= get($url) or die "Cannot get bad ip list";
-my @ip_list=split('\n',$response);
+my @ip_list=map {s/\s+//g; $_} sort map {s/(\d+)/sprintf "%3s", $1/eg; $_} split('\n',$response);
 
 if(scalar(@ip_list) > 0){
 	my $tmp_fh;
@@ -38,11 +38,13 @@ if(scalar(@ip_list) > 0){
 sub md5sum{
 	my $file=shift;
 	my $digest="";
-	open(FH,$file) or die "Can't open file for md5sum\n";
-	my $md5=Digest::MD5->new;
-	$md5->addfile(*FH);
-	$digest=$md5->hexdigest;
-	close(FH);
+	if(-e $file){
+		open(FH,$file) or die "Can't open file for md5sum\n";
+		my $md5=Digest::MD5->new;
+		$md5->addfile(*FH);
+		$digest=$md5->hexdigest;
+		close(FH);
+	}
 
 	return $digest;
 }
